@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "JobHunt"
+version = "1.0.0"
+id = "artifacts/jobhunt"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20312
+
+[services.development]
+run = "pnpm --filter @workspace/jobhunt run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/jobhunt", "run", "build" ]
+publicDir = "artifacts/jobhunt/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20312"
+BASE_PATH = "/"

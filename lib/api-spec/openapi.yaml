@@ -1,0 +1,133 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Job aggregator API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: jobs
+    description: Job search operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /jobs:
+    get:
+      operationId: searchJobs
+      tags: [jobs]
+      summary: Search aggregated jobs
+      parameters:
+        - in: query
+          name: skills
+          schema: { type: string }
+        - in: query
+          name: experience
+          schema: { type: string }
+        - in: query
+          name: domain
+          schema: { type: string }
+        - in: query
+          name: location
+          schema: { type: string }
+        - in: query
+          name: remote
+          schema: { type: boolean }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 20, default: 10 }
+        - in: query
+          name: source
+          schema:
+            type: string
+            enum: [google, indeed, linkedin, naukri, jsearch, remotive]
+      responses:
+        "200":
+          description: Job search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobSearchResponse"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+    Job:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        company: { type: string }
+        location: { type: string }
+        remote: { type: boolean }
+        salary: { type: [string, "null"] }
+        experience: { type: [string, "null"] }
+        skills:
+          type: array
+          items: { type: string }
+        domain: { type: [string, "null"] }
+        postedAt: { type: [string, "null"] }
+        applyUrl: { type: string }
+        source:
+          type: string
+          enum: [google, indeed, linkedin, naukri, jsearch, remotive]
+        scrapedAt: { type: string }
+      required:
+        - id
+        - title
+        - company
+        - location
+        - remote
+        - salary
+        - experience
+        - skills
+        - domain
+        - postedAt
+        - applyUrl
+        - source
+        - scrapedAt
+    JobSearchMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        totalPages: { type: integer }
+        hasNext: { type: boolean }
+        hasPrev: { type: boolean }
+        sources:
+          type: array
+          items: { type: string }
+        warnings:
+          type: array
+          items: { type: string }
+      required: [page, limit, total, totalPages, hasNext, hasPrev, sources, warnings]
+    JobSearchResponse:
+      type: object
+      properties:
+        jobs:
+          type: array
+          items: { $ref: "#/components/schemas/Job" }
+        meta: { $ref: "#/components/schemas/JobSearchMeta" }
+        fromCache: { type: boolean }
+      required: [jobs, meta, fromCache]
