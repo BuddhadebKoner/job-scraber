@@ -1,0 +1,51 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: jobfinder-api
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    container_name: jobfinder-worker
+    env_file: .env
+    volumes:
+      - ./app:/app/app
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: jobfinder-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+# ---------------------------------------------------------------------------
+# NOTE ON POSTGRES: intentionally NOT defined here since you already have a
+# Postgres container running elsewhere. Point DATABASE_URL in .env at it.
+#
+# Two ways to reach it from these containers:
+#   1. EASIEST (Docker Desktop on Windows/Mac): if your Postgres container
+#      publishes its port to the host (e.g. "-p 5432:5432" or a ports: entry
+#      in its own compose file), use `host.docker.internal` as the hostname
+#      in DATABASE_URL. No network config needed here.
+#   2. If you'd rather connect by container name: join this stack to the
+#      same Docker network as your Postgres container, e.g.:
+#        networks:
+#          default:
+#            external: true
+#            name: <name-of-your-existing-network>
+#      then use the Postgres container's name as the hostname in DATABASE_URL.
+# ---------------------------------------------------------------------------
